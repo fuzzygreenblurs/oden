@@ -84,6 +84,7 @@ Lets take a closer look at each packet in this snippet:
 - length: specifies the length (bytes) of payload data. In this case, no data is sent so it is 0.
 
 ## tcpdump/networking #2: what does this snippet show?
+
 ```
 14:21:27.709546 
     IP 192.168.100.4.56299 > 192.168.100.1.21: 
@@ -92,7 +93,7 @@ Lets take a closer look at each packet in this snippet:
         win 65535, 
         options [ mss 1413, nop, wscale 5, nop, nop, TS val 605467583 ecr 0, sackOK, eol ], 
         length 0
-
+        
 14:21:27.711601 
     IP 192.168.100.1.21 > 192.168.100.4.56299: 
         Flags [R.], 
@@ -101,6 +102,8 @@ Lets take a closer look at each packet in this snippet:
         win 0, 
         length 0
 ```
+
+Here the flag `R.` refers to a `RST-ACK` response. If hostB sends `RST-ACK` as a response to a `SYN`, this is generally a sign that hostA is trying to make a connection to a port on hostB that is inaccessible. This could be due to a port mapping issue or that the port itself might simply be closed.
 
 ## 3. Sniff packets on only one specific connection.
 I only want to see all packets exchanged between my local machine and remote host 192.168.1.10 on
