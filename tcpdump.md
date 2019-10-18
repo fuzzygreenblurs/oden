@@ -22,7 +22,7 @@ Lets take a closer look at each packet in this snippet:
         length 0
 ``` 
 
-- The first line in the timestamp at which the packet is actually processed
+- The first line in the timestamp at which the packet is actually processed by the receiving system's clock
 - The second line tells us that this is an IPv4 transaction and that `hostA` (at port `56281`) is sending this packet to `hostB` (at port `80`)
 - The flag is set to `S` which denotes that the SYN bit has been set, telling `hostB` that this is an initial connection
 - Sequence number:
@@ -105,51 +105,11 @@ Lets take a closer look at each packet in this snippet:
 
 Here the flag `R.` refers to a `RST-ACK` response. If hostB sends `RST-ACK` as a response to a `SYN`, this is generally a sign that hostA is trying to make a connection to a port on hostB that is inaccessible. This could be due to a port mapping issue or that the port itself might simply be closed.
 
-## 3. Sniff packets on only one specific connection.
-I only want to see all packets exchanged between my local machine and remote host 192.168.1.10 on
-port 4450. How can I print these out in ASCII using tcpdump?
+## tcpdump/networking #3. sniff packets on only one specific connection.
+`tcpdump -i any host 192.168.1.10 and port 4450 -A`
 
-
-## test
-```
-08:41:13.729687                                                     => timestamp 
-IP 192.168.64.28.22 > 192.168.64.1.41916:                           => ipv4 source/port + destination/port 
-    Flags [P.],                                                     => TCP flags (PUSH + ACK)   
-    seq 196:568,                                                    => sequence number: this packet contains bytes 196:568 of flow
-    ack 1,                                                          => for the receiving side, this number represents the next expected byte of flow
-    win 309,                                                        => represents the maximum number of unacknowledged bytes that can be in transit
-                                                                        => when sender hits this limit, it must stop sending until receiving ACK
-                                                                        => sender should buffer data sent until ACK, at which point it can be discarded
-    options [ nop, nop, TS val 117964079 ecr 816509256 ],           => 
-    length 372                                                      => length (bytes) of payload data. diff in values of sequence number
-```
-
-```
-13:13:22.407445 
-    IP 192.168.246.128.54955 > 192.168.246.13.80: 
-        S 2910497703:2910497703(0) 
-        win 5840 
-        <mss 1460, sackok, timestamp="" 518611="" 0, nop, wscale="" 6="">
-
-13:13:22.407560 
-    IP 192.168.246.13.80 > 192.168.246.128.54955: 
-        S 3762608065:3762608065(0) 
-        ack 2910497704 
-        win 64240 
-        <mss 1460,nop,wscale="" 0,nop,nop,timestamp="" 0="" 0,nop,nop,sackok="">
-
-13:13:22.407963 
-    IP 192.168.246.128.54955 > 192.168.246.13.80: 
-        . 
-    ack 1 
-    win 92 
-    <nop,nop,timestamp 518611="" 0="">
-
-13:13:22.408321 
-    IP 192.168.246.128.54955 > 192.168.246.13.80: 
-    R 
-    1:1(0) 
-    ack 1 
-    win 92 
-    <nop,nop,timestamp 518611="" 0="">
-```
+where:
+    - `i any`: used to capture packets sent over any of the interfaces on the local machine
+    - `host`: defines the remote host's ip address
+    - `port`: defines the specific port on the remote host
+    - `-A`: displays captured packets in ASCII
