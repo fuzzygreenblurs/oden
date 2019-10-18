@@ -1,6 +1,13 @@
-## 1. What does this snippet show?
+## tcpdump/networking #1: what does this snippet show?
 
-This snippet shows a TCP handshake transaction to establish a connection between two IPv4 hosts. Let's use `hostA` to identify the host at 192.168.100.4 and `hostB` to identify the host at 192.168.100.10. 
+This snippet shows a 3 way TCP handshake transaction to establish a connection between two IPv4 hosts. Let's use `hostA` to identify the host at `192.168.100.4` and `hostB` to identify the host at `192.168.100.10`. 
+
+Diagrammatically:
+```
+hostA SYN --->
+          <--- hostB SYN-ACK
+hostA ACK --->
+```
 
 Lets take a closer look at each packet in this snippet:
 
@@ -16,15 +23,17 @@ Lets take a closer look at each packet in this snippet:
 ``` 
 
 - The first line in the timestamp at which the packet is actually processed
-- The second line tells us that this is an IPv4 transaction and that hostA (at port 56281) is sending this packet to hostB (at port 80)
-- The flag is set to `S` which denotes that the SYN bit has been set, telling hostB that this is an initial connection
+- The second line tells us that this is an IPv4 transaction and that `hostA` (at port `56281`) is sending this packet to `hostB` (at port `80`)
+- The flag is set to `S` which denotes that the SYN bit has been set, telling `hostB` that this is an initial connection
 - Sequence number:
-    - hostA also generates and sends over a sequence number 
-    - hostB uses this number to ensure that it receives all subsequent packets and in order
-    - This is one of the biggest advantages of using TCP
-- win
-- options
-- length
+    - `hostA` also generates and sends over a sequence number 
+    - `hostB` uses this number to ensure that it receives all subsequent packets and in order
+    - Note: This is one of the biggest advantages of using TCP
+- win or window size:
+    - specificies the maximum number of bytes that can be transmitted at this point in time
+    - here, nothing needs to be processed on the hostB side and both sender and receiver buffers are empty
+    - so upto the maximum number of bytes (2^16) can be sent
+- length: specifies the length (bytes) of payload data. In this case, no data is sent so it is 0.
 
 #### Packet 2
 ```
@@ -39,21 +48,21 @@ Lets take a closer look at each packet in this snippet:
 ```
 
 - Again, the first line in the timestamp at which the packet is actually processed
-- In this case, the second line tells us that now hostB is sending this packet to hostA
+- In this case, the second line tells us that now `hostB` is sending this packet to `hostA`
 - The flag is set to `S.` which denotes that both the ACK and the SYN bits have been set
     - ACK: 
-        - hostB is sending back an acknowledgement to the initial SYN request that hostA sent in the first packet
-        - hostB also specifies the next sequence number that hostA should use when sending a subsequent data packet
-        - if the next data packet from hostA has a different sequence number, theres a potential of:
+        - `hostB` is sending back an acknowledgement to the initial SYN request that `hostA` sent in the first packet
+        - `hostB` also specifies the next sequence number that `hostA` should use when sending a subsequent data packet
+        - if the next data packet from `hostA` has a different sequence number, theres a potential of:
             - packets are either arriving out of order
             - packet loss
             - crossing conversations between hosts at different posts
     - SYN:
-        - since TCP is bidirectional, hostB must also repeat the SYN process with hostA in the opposite direction
-        - so hostB also generates and sends over a sequence number in a similar manner as hostA did in the first packet
-- win
-- options
-- length
+        - since TCP is bidirectional, `hostB` must also repeat the SYN process with `hostA` in the opposite direction
+        - so `hostB` also generates and sends over a sequence number in a similar manner as `hostA` did in the first packet
+- win: once again, the window size specifies the number of bytes allowed to be in transit from hostA to hostB
+    - in this case, a maximum of 42540 bytes can be sent over the connection, potentially since this is the maximum size of the hostA buffer
+- length: specifies the length (bytes) of payload data. In this case, no data is sent so it is 0.
 
 #### Packet 3
 ```
@@ -66,17 +75,15 @@ Lets take a closer look at each packet in this snippet:
         length 0
 ```
 - Again, the first line in the timestamp at which the packet is actually processed
-- In this case, once again, hostA is now sending a response to hostB
+- In this case, once again, `hostA` is now sending a response to `hostB`
 - The flag is set to `.` which denotes that only the ACK bit has been set
     - ACK: 
-        - hostA is now sending back an acknowledgement to the SYN request that hostB sent in the second packet
+        - `hostA` is now sending back an acknowledgement to the SYN request that `hostB` sent in the second packet
         - the ACK number of 1 is the expected sequence number
-        - hostB will need to use this number as its sequence number for the subsequent packet it sends to hostA next
-- win
-- options
-- length
+        - `hostB` will need to use this number as its sequence number for the subsequent packet it sends to `hostA` next
+- length: specifies the length (bytes) of payload data. In this case, no data is sent so it is 0.
 
-## 2. What does this snippet show?
+## tcpdump/networking #2: what does this snippet show?
 ```
 14:21:27.709546 
     IP 192.168.100.4.56299 > 192.168.100.1.21: 
@@ -99,3 +106,47 @@ Lets take a closer look at each packet in this snippet:
 I only want to see all packets exchanged between my local machine and remote host 192.168.1.10 on
 port 4450. How can I print these out in ASCII using tcpdump?
 
+
+## test
+```
+08:41:13.729687                                                     => timestamp 
+IP 192.168.64.28.22 > 192.168.64.1.41916:                           => ipv4 source/port + destination/port 
+    Flags [P.],                                                     => TCP flags (PUSH + ACK)   
+    seq 196:568,                                                    => sequence number: this packet contains bytes 196:568 of flow
+    ack 1,                                                          => for the receiving side, this number represents the next expected byte of flow
+    win 309,                                                        => represents the maximum number of unacknowledged bytes that can be in transit
+                                                                        => when sender hits this limit, it must stop sending until receiving ACK
+                                                                        => sender should buffer data sent until ACK, at which point it can be discarded
+    options [ nop, nop, TS val 117964079 ecr 816509256 ],           => 
+    length 372                                                      => length (bytes) of payload data. diff in values of sequence number
+```
+
+```
+13:13:22.407445 
+    IP 192.168.246.128.54955 > 192.168.246.13.80: 
+        S 2910497703:2910497703(0) 
+        win 5840 
+        <mss 1460, sackok, timestamp="" 518611="" 0, nop, wscale="" 6="">
+
+13:13:22.407560 
+    IP 192.168.246.13.80 > 192.168.246.128.54955: 
+        S 3762608065:3762608065(0) 
+        ack 2910497704 
+        win 64240 
+        <mss 1460,nop,wscale="" 0,nop,nop,timestamp="" 0="" 0,nop,nop,sackok="">
+
+13:13:22.407963 
+    IP 192.168.246.128.54955 > 192.168.246.13.80: 
+        . 
+    ack 1 
+    win 92 
+    <nop,nop,timestamp 518611="" 0="">
+
+13:13:22.408321 
+    IP 192.168.246.128.54955 > 192.168.246.13.80: 
+    R 
+    1:1(0) 
+    ack 1 
+    win 92 
+    <nop,nop,timestamp 518611="" 0="">
+```
