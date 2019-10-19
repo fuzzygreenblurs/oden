@@ -18,7 +18,7 @@ To determine the `boot_partition_identifier`, we can run something like:
 
 This will give us a list of all the mounted filesystems, and we can clearly determine the exact partition identifier with a mountpoint of `/boot`
 
-* But since the boot partition is generally mounted at /boot, a more concise version of the command would look something like: *
+__But since the boot partition is generally mounted at /boot, a more concise version of the command would look something like:__
 `mount -o remount, rw /boot`
 
 #### 2. Vetting Embedded Linux Device Updates 
