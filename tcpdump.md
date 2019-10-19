@@ -106,10 +106,10 @@ Lets take a closer look at each packet in this snippet:
 Here the flag `R.` refers to a `RST-ACK` response. If hostB sends `RST-ACK` as a response to a `SYN`, this is generally a sign that hostA is trying to make a connection to a port on hostB that is inaccessible. This could be due to a port mapping issue or that the port itself might simply be closed.
 
 ## tcpdump/networking #3. sniff packets on only one specific connection.
-`tcpdump -i any host 192.168.1.10 and port 4450 -A`
+command: `tcpdump -i any host 192.168.1.10 and port 4450 -A`
 
 where:
-    - `i any`: used to capture packets sent over any of the interfaces on the local machine
-    - `host`: defines the remote host's ip address
-    - `port`: defines the specific port on the remote host
-    - `-A`: displays captured packets in ASCII
+- `i any`: used to capture packets sent over any of the interfaces on the local machine
+- `host` : defines the remote host's ip address
+- `port` : defines the specific port on the remote host
+- `-A`   : displays captured packets in ASCII
