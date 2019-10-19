@@ -7,11 +7,11 @@ how would you remount a filesystem in read write mode without rebooting the mach
 
 A general template of the command we can use is `mount -o remount, rw boot_partition_identifier mounted_fs_access_path`
 where:
-    - `-o`                        : accesses the `mount` utility command options
-    - `remount`                   : allows us to remount the already mounted filesystem
-    - `rw`                        : sets the permissions to read-write
-    - `boot_partition_identifier` : this is the identifier that we use to target the `boot` filesystem
-    - `mounted_fs_access_path`    : the file path to access the newly remounted /boot specific filesystem. generally this would be at `/boot`
+- `-o`                        : accesses the `mount` utility command options
+- `remount`                   : allows us to remount the already mounted filesystem
+- `rw`                        : sets the permissions to read-write
+- `boot_partition_identifier` : this is the identifier that we use to target the `boot` filesystem
+- `mounted_fs_access_path`    : the file path to access the newly remounted /boot specific filesystem. generally this would be at `/boot`
 
 To determine the `boot_partition_identifier`, we can run something like: 
 `mount -v | grep "^/" | awk '{print "\nPartition identifier: " $1  "\n Mountpoint: "  $3}'`
